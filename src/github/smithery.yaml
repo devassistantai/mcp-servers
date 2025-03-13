@@ -1,0 +1,28 @@
+# Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
+
+build:
+  dockerBuildPath: ../..
+startCommand:
+  type: stdio
+  configSchema:
+    # JSON Schema defining the configuration options for the MCP.
+    type: object
+    required:
+      - githubPersonalAccessToken
+    properties:
+      githubPersonalAccessToken:
+        type: string
+        description: Your GitHub Personal Access Token with the required permissions
+          (repo scope) for accessing the GitHub API.
+  commandFunction:
+    # A JS function that produces the CLI command based on the given config to start the MCP on stdio.
+    |-
+    (config) => ({
+      command: 'node',
+      args: ['dist/index.js'],
+      env: {
+        GITHUB_PERSONAL_ACCESS_TOKEN: config.githubPersonalAccessToken
+      }
+    })
+  exampleConfig:
+    githubPersonalAccessToken: YOUR_GITHUB_TOKEN_HERE

@@ -1,5 +1,5 @@
 {
-  "name": "@modelcontextprotocol/server-github-projects",
+  "name": "@devassistantai/server-github-projects",
   "version": "0.1.0",
   "description": "MCP server for GitHub Projects V2 API",
   "license": "MIT",

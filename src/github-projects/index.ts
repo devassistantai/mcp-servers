@@ -136,13 +136,15 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   try {
-    const { name, parameters } = request;
+    const { params } = request;
+    const name = params.name as string;
+    const parameters = params.arguments as Record<string, any> || {};
     
     switch (name) {
       // Projects
       case "list_projects":
         return await projects.listProjects(
-          parameters.owner,
+          parameters.owner as string,
           parameters.type,
           parameters.first
         );
@@ -267,16 +269,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function runServer() {
   console.error(`Starting GitHub Projects MCP Server v${VERSION}...`);
 
-  if (!process.env.GITHUB_PERSONAL_ACCESS_TOKEN) {
-    console.error("GITHUB_PERSONAL_ACCESS_TOKEN environment variable is not set.");
-    console.error("This is required to authenticate with GitHub.");
-    console.error("You can create a personal access token at https://github.com/settings/tokens");
-    console.error("Make sure to give it the 'repo' and 'project' scopes.");
+  if (!process.env.GITHUB_TOKEN) {
+    console.error("GITHUB_TOKEN environment variable is required");
     process.exit(1);
   }
 
   const transport = new StdioServerTransport();
-  await server.listen(transport);
+  await server.connect(transport);
+  console.error("GitHub Projects MCP Server running on stdio");
 }
 
 runServer().catch((err) => {

@@ -1,0 +1,23 @@
+# Configuração Smithery
+# Documentação oficial: https://smithery.dev/docs/configuration
+
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    required: ["githubToken"]
+    properties:
+      githubToken:
+        type: string
+        description: Token de acesso pessoal do GitHub com permissões para acessar projetos
+  commandFunction: |
+    ({ githubToken }) => {
+      return {
+        command: "node",
+        args: ["./dist/index.js"],
+        cwd: __dirname,
+        env: {
+          GITHUB_TOKEN: githubToken
+        }
+      }
+    }

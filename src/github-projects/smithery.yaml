@@ -1,23 +1,22 @@
-# Configuração Smithery
-# Documentação oficial: https://smithery.dev/docs/configuration
+# Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
 
 startCommand:
   type: stdio
   configSchema:
+    # JSON Schema defining the configuration options for the MCP
     type: object
-    required: ["githubToken"]
+    required:
+      - githubToken
     properties:
       githubToken:
         type: string
-        description: Token de acesso pessoal do GitHub com permissões para acessar projetos
+        description: "GitHub personal access token with projects access"
+  
   commandFunction: |
-    ({ githubToken }) => {
-      return {
-        command: "node",
-        args: ["./dist/index.js"],
-        cwd: __dirname,
-        env: {
-          GITHUB_TOKEN: githubToken
-        }
+    (config) => ({
+      command: 'node',
+      args: ['dist/index.js'],
+      env: {
+        GITHUB_TOKEN: config.githubToken
       }
-    }
+    }) 

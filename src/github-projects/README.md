@@ -42,7 +42,7 @@ This MCP server allows language models to interact with GitHub Projects V2 throu
 ## Installation
 
 ```bash
-npm install @modelcontextprotocol/server-github-projects
+npm install @devassistantai/server-github-projects
 ```
 
 ## Configuration
@@ -58,7 +58,7 @@ export GITHUB_PERSONAL_ACCESS_TOKEN=your_token_here
 ### As a module
 
 ```javascript
-import { startServer } from '@modelcontextprotocol/server-github-projects';
+import { startServer } from '@devassistantai/server-github-projects';
 
 startServer();
 ```

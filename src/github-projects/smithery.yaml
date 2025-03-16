@@ -13,12 +13,4 @@ startCommand:
         description: "GitHub personal access token with projects access"
   commandFunction: 
     |-
-    (config) => ({
-      "command": "node",
-      "args": [
-        "dist/index.js"
-      ],
-      "env": {
-        "GITHUB_TOKEN": config.githubToken
-      }
-    }) 
+    (config) => ({ command: 'node', args: ['dist/index.js'], env: { GITHUB_TOKEN: config.githubToken } })

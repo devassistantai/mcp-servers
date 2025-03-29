@@ -19,7 +19,7 @@ import { updateProject, UpdateProjectSchema } from './tools/update-project.js';
 import { toggleProjectArchive, ToggleProjectArchiveSchema } from './tools/toggle-project-archive.js';
 
 // Importa utilitários
-import logger from './utils/logger.js';
+import logger, { safeConsole } from './utils/logger.js';
 import { getTokenWarning } from './utils/token-utils.js';
 
 /**
@@ -199,24 +199,24 @@ async function runServer() {
   try {
     const transport = new StdioServerTransport();
     await server.connect(transport);
-    console.error("GitHub Projects MCP Server running on stdio");
+    safeConsole.log({ message: "GitHub Projects MCP Server running on stdio" });
   } catch (error) {
-    console.error("Erro ao iniciar o servidor:", error);
+    safeConsole.error({ message: "Erro ao iniciar o servidor", error });
     process.exit(1);
   }
 }
 
 // Configura captura global de exceções não tratadas
 process.on('uncaughtException', (error: Error) => {
-  console.error('Exceção não tratada:', error);
+  safeConsole.error({ message: 'Exceção não tratada', error });
 });
 
 process.on('unhandledRejection', (reason: any) => {
-  console.error('Rejeição de Promise não tratada:', reason);
+  safeConsole.error({ message: 'Rejeição de Promise não tratada', reason });
 });
 
 // Executa o servidor
 runServer().catch((error) => {
-  console.error("Fatal error:", error);
+  safeConsole.error({ message: "Fatal error", error });
   process.exit(1);
 }); 

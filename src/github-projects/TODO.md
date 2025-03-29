@@ -33,7 +33,7 @@
 | `list_projects`         | ✅ Sucesso | Lista projetos de usuários e organizações              |
 | `create_project`        | ✅ Sucesso | Cria projetos após obter ID global do proprietário     |
 | `update_project`        | ✅ Sucesso | Atualiza informações básicas de projetos               |
-| `toggle_project_archive`| ⏳ Pendente | Implementado para fechar/abrir projetos                |
+| `toggle_project_archive`| ✅ Sucesso | Fecha/abre projetos usando o campo `closed`            |
 
 ## Informações Importantes
 
@@ -72,6 +72,12 @@
 - **IDs globais do GitHub**: Para criar projetos, é necessário obter o ID global real do usuário/organização, não basta concatenar "user/nome"
 - **Campos GraphQL**: Apenas o título e ownerId são obrigatórios para criar projetos
 - **Formato MCP**: As ferramentas MCP esperam parâmetros nomeados e retornam respostas estruturadas consistentes
+- **Saída do console**: Todo texto impresso no console deve ser JSON válido para evitar erros no Cursor. Sempre use safeConsole ou funções similares
+
+### Implementações de Segurança
+- **Logs em JSON válido**: Implementadas funções de log que garantem que toda saída seja JSON válido
+- **Sanitização de respostas**: Função `createMcpResponse` garante que as respostas MCP sejam sempre JSON válido
+- **Tratamento de erros**: Erros e exceções são capturados e formatados como JSON válido
 
 ### Links Úteis
 - [Documentação GraphQL GitHub](https://docs.github.com/en/graphql)

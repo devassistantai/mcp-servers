@@ -14,6 +14,59 @@ const LOG_LEVELS = {
 
 type LogLevel = keyof typeof LOG_LEVELS;
 
+/**
+ * Formata qualquer tipo de dados para JSON válido
+ * Esta função garante que a saída sempre será um JSON válido,
+ * mesmo com objetos circulares ou tipos complexos
+ */
+function toValidJson(data: any): string {
+  try {
+    // Para strings, verifica se já é um JSON válido
+    if (typeof data === 'string') {
+      try {
+        JSON.parse(data);
+        return data; // Já é um JSON válido
+      } catch {
+        // Não é JSON, então converte para string JSON
+        return JSON.stringify({ message: data });
+      }
+    }
+    
+    // Para erros, extrai informações importantes
+    if (data instanceof Error) {
+      return JSON.stringify({
+        error: data.message,
+        name: data.name,
+        stack: data.stack,
+      });
+    }
+    
+    // Para outros tipos, tenta converter para JSON
+    return JSON.stringify(data, (key, value) => {
+      // Evita referências circulares
+      if (typeof value === 'object' && value !== null) {
+        if (seen.has(value)) {
+          return '[Circular Reference]';
+        }
+        seen.add(value);
+      }
+      return value;
+    });
+  } catch (err) {
+    // Fallback garantido para qualquer erro
+    return JSON.stringify({ 
+      message: 'Erro ao converter para JSON', 
+      originalDataType: typeof data,
+      originalToString: String(data)
+    });
+  } finally {
+    seen.clear(); // Limpa o Set após uso
+  }
+}
+
+// Set para rastrear objetos já visitados (para evitar referências circulares)
+const seen = new Set();
+
 // Verifica se o nível de log atual permite o log do nível especificado
 function shouldLog(level: LogLevel): boolean {
   const currentLevelValue = LOG_LEVELS[logLevel as LogLevel] ?? LOG_LEVELS.info;
@@ -30,6 +83,32 @@ function formatObject(obj: any): string {
   }
 }
 
+/**
+ * Wrappers para console.log, console.error, etc.
+ * que garantem saída como JSON válido
+ */
+export const safeConsole = {
+  log(data: any): void {
+    console.log(toValidJson(data));
+  },
+  
+  error(data: any): void {
+    console.error(toValidJson(data));
+  },
+  
+  info(data: any): void {
+    console.info(toValidJson(data));
+  },
+  
+  warn(data: any): void {
+    console.warn(toValidJson(data));
+  },
+  
+  debug(data: any): void {
+    console.debug(toValidJson(data));
+  }
+};
+
 // Logger simples para não depender de bibliotecas externas
 const logger = {
   debug(message: string | object, ...args: any[]): void {
@@ -38,7 +117,14 @@ const logger = {
     const formattedMessage = typeof message === 'string' 
       ? message 
       : formatObject(message);
-    console.debug(`[${timestamp}] [DEBUG] ${formattedMessage}`, ...args);
+    
+    // Usa safeConsole em vez de console diretamente
+    safeConsole.debug({
+      timestamp,
+      level: 'DEBUG',
+      message: formattedMessage,
+      args: args.length > 0 ? args : undefined
+    });
   },
   
   info(message: string | object, ...args: any[]): void {
@@ -47,7 +133,14 @@ const logger = {
     const formattedMessage = typeof message === 'string' 
       ? message 
       : formatObject(message);
-    console.info(`[${timestamp}] [INFO] ${formattedMessage}`, ...args);
+    
+    // Usa safeConsole em vez de console diretamente
+    safeConsole.info({
+      timestamp,
+      level: 'INFO',
+      message: formattedMessage,
+      args: args.length > 0 ? args : undefined
+    });
   },
   
   warn(message: string | object, ...args: any[]): void {
@@ -56,7 +149,14 @@ const logger = {
     const formattedMessage = typeof message === 'string' 
       ? message 
       : formatObject(message);
-    console.warn(`[${timestamp}] [WARN] ${formattedMessage}`, ...args);
+    
+    // Usa safeConsole em vez de console diretamente
+    safeConsole.warn({
+      timestamp,
+      level: 'WARN',
+      message: formattedMessage,
+      args: args.length > 0 ? args : undefined
+    });
   },
   
   error(message: string | object, ...args: any[]): void {
@@ -65,7 +165,14 @@ const logger = {
     const formattedMessage = typeof message === 'string' 
       ? message 
       : formatObject(message);
-    console.error(`[${timestamp}] [ERROR] ${formattedMessage}`, ...args);
+    
+    // Usa safeConsole em vez de console diretamente
+    safeConsole.error({
+      timestamp,
+      level: 'ERROR',
+      message: formattedMessage,
+      args: args.length > 0 ? args : undefined
+    });
   }
 };
 

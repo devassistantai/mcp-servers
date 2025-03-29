@@ -2,13 +2,20 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-// Função para garantir saída JSON válida
+// Desabilitar completamente os logs
+const disableLogs = true;
+
+// Função para garantir saída JSON válida (mas que não produzirá saída se disableLogs for true)
 function safeLog(data: any): void {
-  console.log(JSON.stringify(data));
+  if (!disableLogs) {
+    console.log(JSON.stringify(data));
+  }
 }
 
 function safeError(data: any): void {
-  console.error(JSON.stringify(data));
+  if (!disableLogs) {
+    console.error(JSON.stringify(data));
+  }
 }
 
 // Para compatibilidade com sistemas Unix/Linux

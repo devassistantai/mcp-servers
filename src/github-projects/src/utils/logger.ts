@@ -3,6 +3,7 @@ import 'dotenv/config';
 // Configuração do logger
 const logLevel = process.env.LOG_LEVEL || 'info';
 const enableDiagnostics = process.env.LOG_DIAGNOSTICS === 'true';
+const disableAllLogs = true; // Desativa completamente todos os logs para evitar problemas de formatação JSON
 
 // Níveis de log e seus valores numéricos
 const LOG_LEVELS = {
@@ -13,6 +14,24 @@ const LOG_LEVELS = {
 } as const;
 
 type LogLevel = keyof typeof LOG_LEVELS;
+
+// Substitui os métodos do console por funções vazias para evitar problemas de formatação
+const originalConsole = {
+  log: console.log,
+  error: console.error,
+  warn: console.warn,
+  info: console.info,
+  debug: console.debug
+};
+
+// No-op functions (não fazem nada)
+if (disableAllLogs) {
+  console.log = function() {};
+  console.error = function() {};
+  console.warn = function() {};
+  console.info = function() {};
+  console.debug = function() {};
+}
 
 /**
  * Formata qualquer tipo de dados para JSON válido
@@ -85,40 +104,50 @@ function formatObject(obj: any): string {
 
 /**
  * Wrappers para console.log, console.error, etc.
- * que garantem saída como JSON válido
+ * que não produzem saída quando disableAllLogs é true
  */
 export const safeConsole = {
   log(data: any): void {
-    console.log(toValidJson(data));
+    if (!disableAllLogs) {
+      originalConsole.log(JSON.stringify(data));
+    }
   },
   
   error(data: any): void {
-    console.error(toValidJson(data));
+    if (!disableAllLogs) {
+      originalConsole.error(JSON.stringify(data));
+    }
   },
   
   info(data: any): void {
-    console.info(toValidJson(data));
+    if (!disableAllLogs) {
+      originalConsole.info(JSON.stringify(data));
+    }
   },
   
   warn(data: any): void {
-    console.warn(toValidJson(data));
+    if (!disableAllLogs) {
+      originalConsole.warn(JSON.stringify(data));
+    }
   },
   
   debug(data: any): void {
-    console.debug(toValidJson(data));
+    if (!disableAllLogs) {
+      originalConsole.debug(JSON.stringify(data));
+    }
   }
 };
 
-// Logger simples para não depender de bibliotecas externas
+// Logger simples que não produz saída quando disableAllLogs é true
 const logger = {
   debug(message: string | object, ...args: any[]): void {
-    if (!shouldLog('debug')) return;
+    if (disableAllLogs || !shouldLog('debug')) return;
+    
     const timestamp = new Date().toISOString();
     const formattedMessage = typeof message === 'string' 
       ? message 
       : formatObject(message);
     
-    // Usa safeConsole em vez de console diretamente
     safeConsole.debug({
       timestamp,
       level: 'DEBUG',
@@ -128,13 +157,13 @@ const logger = {
   },
   
   info(message: string | object, ...args: any[]): void {
-    if (!shouldLog('info')) return;
+    if (disableAllLogs || !shouldLog('info')) return;
+    
     const timestamp = new Date().toISOString();
     const formattedMessage = typeof message === 'string' 
       ? message 
       : formatObject(message);
     
-    // Usa safeConsole em vez de console diretamente
     safeConsole.info({
       timestamp,
       level: 'INFO',
@@ -144,13 +173,13 @@ const logger = {
   },
   
   warn(message: string | object, ...args: any[]): void {
-    if (!shouldLog('warn')) return;
+    if (disableAllLogs || !shouldLog('warn')) return;
+    
     const timestamp = new Date().toISOString();
     const formattedMessage = typeof message === 'string' 
       ? message 
       : formatObject(message);
     
-    // Usa safeConsole em vez de console diretamente
     safeConsole.warn({
       timestamp,
       level: 'WARN',
@@ -160,13 +189,13 @@ const logger = {
   },
   
   error(message: string | object, ...args: any[]): void {
-    if (!shouldLog('error')) return;
+    if (disableAllLogs || !shouldLog('error')) return;
+    
     const timestamp = new Date().toISOString();
     const formattedMessage = typeof message === 'string' 
       ? message 
       : formatObject(message);
     
-    // Usa safeConsole em vez de console diretamente
     safeConsole.error({
       timestamp,
       level: 'ERROR',
@@ -228,7 +257,7 @@ function sanitizeBody(body: any): any {
 
 // Log de requisição para API externa
 export function logApiRequest(details: ApiLogDetails): void {
-  if (!enableDiagnostics && !shouldLog('debug')) return;
+  if (disableAllLogs || (!enableDiagnostics && !shouldLog('debug'))) return;
   
   logger.debug({
     msg: 'API Request',
@@ -241,7 +270,7 @@ export function logApiRequest(details: ApiLogDetails): void {
 
 // Log de resposta de API externa
 export function logApiResponse(details: ApiLogDetails): void {
-  if (!enableDiagnostics && !shouldLog('debug')) return;
+  if (disableAllLogs || (!enableDiagnostics && !shouldLog('debug'))) return;
   
   logger.debug({
     msg: 'API Response',
@@ -253,6 +282,8 @@ export function logApiResponse(details: ApiLogDetails): void {
 
 // Log de erro de API externa
 export function logApiError(details: ApiLogDetails): void {
+  if (disableAllLogs) return;
+  
   logger.error({
     msg: 'API Error',
     url: details.url,
@@ -264,6 +295,8 @@ export function logApiError(details: ApiLogDetails): void {
 
 // Log de requisição MCP recebida
 export function logMcpRequest(toolName: string, params: any): void {
+  if (disableAllLogs) return;
+  
   logger.info({
     msg: 'MCP Request',
     tool: toolName,
@@ -273,6 +306,8 @@ export function logMcpRequest(toolName: string, params: any): void {
 
 // Log de resposta MCP enviada
 export function logMcpResponse(toolName: string, response: any): void {
+  if (disableAllLogs) return;
+  
   logger.info({
     msg: 'MCP Response',
     tool: toolName,
@@ -282,6 +317,8 @@ export function logMcpResponse(toolName: string, response: any): void {
 
 // Log de erro MCP
 export function logMcpError(toolName: string, error: any): void {
+  if (disableAllLogs) return;
+  
   logger.error({
     msg: 'MCP Error',
     tool: toolName,

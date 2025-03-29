@@ -72,12 +72,13 @@
 - **IDs globais do GitHub**: Para criar projetos, é necessário obter o ID global real do usuário/organização, não basta concatenar "user/nome"
 - **Campos GraphQL**: Apenas o título e ownerId são obrigatórios para criar projetos
 - **Formato MCP**: As ferramentas MCP esperam parâmetros nomeados e retornam respostas estruturadas consistentes
-- **Saída do console**: Todo texto impresso no console deve ser JSON válido para evitar erros no Cursor. Sempre use safeConsole ou funções similares
+- **Saída do console**: Todo texto impresso no console deve ser JSON válido para evitar erros no Cursor. A melhor solução foi desativar completamente os logs.
 
 ### Implementações de Segurança
-- **Logs em JSON válido**: Implementadas funções de log que garantem que toda saída seja JSON válido
+- **Logs desativados**: Implementada flag `disableAllLogs` para evitar completamente erros de formatação no Cursor
+- **Funções silenciosas**: Console e outros métodos de log substituídos por funções vazias
 - **Sanitização de respostas**: Função `createMcpResponse` garante que as respostas MCP sejam sempre JSON válido
-- **Tratamento de erros**: Erros e exceções são capturados e formatados como JSON válido
+- **Tratamento de erros**: Erros e exceções são capturados e formatados como JSON válido, mas não são exibidos no console
 
 ### Links Úteis
 - [Documentação GraphQL GitHub](https://docs.github.com/en/graphql)

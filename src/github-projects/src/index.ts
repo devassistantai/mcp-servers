@@ -17,9 +17,14 @@ import { testConnection, TestConnectionSchema } from './tools/test-connection.js
 import { createProject, CreateProjectSchema } from './tools/create-project.js';
 import { updateProject, UpdateProjectSchema } from './tools/update-project.js';
 import { toggleProjectArchive, ToggleProjectArchiveSchema } from './tools/toggle-project-archive.js';
+import { updateProjectItem, UpdateProjectItemSchema } from './tools/update-project-item.js';
+import { removeProjectItem, RemoveProjectItemSchema } from './tools/remove-project-item.js';
 import { listProjectItems, ListProjectItemsSchema } from './tools/list-project-items.js';
+import { listProjectFields, ListProjectFieldsSchema } from './tools/list-project-fields.js';
+import { listProjectViews, ListProjectViewsSchema } from './tools/list-project-views.js';
 import { addProjectItem, AddProjectItemSchema } from './tools/add-project-item.js';
 import { createDraftItem, CreateDraftItemSchema } from './tools/create-draft-item.js';
+import { createProjectField, CreateProjectFieldSchema } from './tools/create-project-field.js';
 
 // Importa utilitários
 import logger, { safeConsole } from './utils/logger.js';
@@ -94,6 +99,26 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         inputSchema: zodToJsonSchema(ToggleProjectArchiveSchema),
       },
       {
+        name: "update_project_item",
+        description: "Update an existing project item in a GitHub Project (V2)",
+        inputSchema: zodToJsonSchema(UpdateProjectItemSchema),
+      },
+      {
+        name: "remove_project_item",
+        description: "Remove an item from a GitHub Project (V2)",
+        inputSchema: zodToJsonSchema(RemoveProjectItemSchema),
+      },
+      {
+        name: "list_project_fields",
+        description: "List fields from a GitHub Project (V2)",
+        inputSchema: zodToJsonSchema(ListProjectFieldsSchema),
+      },
+      {
+        name: "list_project_views",
+        description: "List views from a GitHub Project (V2)",
+        inputSchema: zodToJsonSchema(ListProjectViewsSchema),
+      },
+      {
         name: "list_project_items",
         description: "List items from a GitHub Project (V2)",
         inputSchema: zodToJsonSchema(ListProjectItemsSchema),
@@ -107,6 +132,11 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         name: "create_draft_item",
         description: "Create a draft item in a GitHub Project (V2)",
         inputSchema: zodToJsonSchema(CreateDraftItemSchema),
+      },
+      {
+        name: "create_project_field",
+        description: "Create a new field in a GitHub Project (V2)",
+        inputSchema: zodToJsonSchema(CreateProjectFieldSchema),
       },
       
       // Aqui serão adicionadas as outras ferramentas à medida que forem implementadas
@@ -183,6 +213,26 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case "toggle_project_archive":
         // @ts-ignore - O tipo de 'parameters' é diferente do esperado, mas os dados estão corretos
         return await toggleProjectArchive(parameters);
+        
+      case "update_project_item":
+        // @ts-ignore - O tipo de 'parameters' é diferente do esperado, mas os dados estão corretos
+        return await updateProjectItem(parameters);
+        
+      case "remove_project_item":
+        // @ts-ignore - O tipo de 'parameters' é diferente do esperado, mas os dados estão corretos
+        return await removeProjectItem(parameters);
+        
+      case "list_project_fields":
+        // @ts-ignore - O tipo de 'parameters' é diferente do esperado, mas os dados estão corretos
+        return await listProjectFields(parameters);
+        
+      case "list_project_views":
+        // @ts-ignore - O tipo de 'parameters' é diferente do esperado, mas os dados estão corretos
+        return await listProjectViews(parameters);
+        
+      case "create_project_field":
+        // @ts-ignore - O tipo de 'parameters' é diferente do esperado, mas os dados estão corretos
+        return await createProjectField(parameters);
         
       case "list_project_items":
         // @ts-ignore - O tipo de 'parameters' é diferente do esperado, mas os dados estão corretos

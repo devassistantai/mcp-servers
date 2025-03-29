@@ -17,6 +17,9 @@ import { testConnection, TestConnectionSchema } from './tools/test-connection.js
 import { createProject, CreateProjectSchema } from './tools/create-project.js';
 import { updateProject, UpdateProjectSchema } from './tools/update-project.js';
 import { toggleProjectArchive, ToggleProjectArchiveSchema } from './tools/toggle-project-archive.js';
+import { listProjectItems, ListProjectItemsSchema } from './tools/list-project-items.js';
+import { addProjectItem, AddProjectItemSchema } from './tools/add-project-item.js';
+import { createDraftItem, CreateDraftItemSchema } from './tools/create-draft-item.js';
 
 // Importa utilitários
 import logger, { safeConsole } from './utils/logger.js';
@@ -89,6 +92,21 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         name: "toggle_project_archive",
         description: "Archive or unarchive a GitHub Project (V2)",
         inputSchema: zodToJsonSchema(ToggleProjectArchiveSchema),
+      },
+      {
+        name: "list_project_items",
+        description: "List items from a GitHub Project (V2)",
+        inputSchema: zodToJsonSchema(ListProjectItemsSchema),
+      },
+      {
+        name: "add_project_item",
+        description: "Add an existing Issue or Pull Request to a GitHub Project (V2)",
+        inputSchema: zodToJsonSchema(AddProjectItemSchema),
+      },
+      {
+        name: "create_draft_item",
+        description: "Create a draft item in a GitHub Project (V2)",
+        inputSchema: zodToJsonSchema(CreateDraftItemSchema),
       },
       
       // Aqui serão adicionadas as outras ferramentas à medida que forem implementadas
@@ -165,6 +183,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case "toggle_project_archive":
         // @ts-ignore - O tipo de 'parameters' é diferente do esperado, mas os dados estão corretos
         return await toggleProjectArchive(parameters);
+        
+      case "list_project_items":
+        // @ts-ignore - O tipo de 'parameters' é diferente do esperado, mas os dados estão corretos
+        return await listProjectItems(parameters);
+        
+      case "add_project_item":
+        // @ts-ignore - O tipo de 'parameters' é diferente do esperado, mas os dados estão corretos
+        return await addProjectItem(parameters);
+        
+      case "create_draft_item":
+        // @ts-ignore - O tipo de 'parameters' é diferente do esperado, mas os dados estão corretos
+        return await createDraftItem(parameters);
         
       // Adicionar novos casos aqui à medida que implementamos mais ferramentas
         

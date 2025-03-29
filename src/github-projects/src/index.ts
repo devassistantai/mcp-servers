@@ -15,12 +15,26 @@ import { VERSION } from './utils/constants.js';
 import { listProjects, ListProjectsSchema } from './tools/list-projects.js';
 import { testConnection, TestConnectionSchema } from './tools/test-connection.js';
 import { createProject, CreateProjectSchema } from './tools/create-project.js';
+import { updateProject, UpdateProjectSchema } from './tools/update-project.js';
+import { toggleProjectArchive, ToggleProjectArchiveSchema } from './tools/toggle-project-archive.js';
 
 // Importa utilitários
 import logger from './utils/logger.js';
 import { getTokenWarning } from './utils/token-utils.js';
 
-// Cria o servidor MCP
+/**
+ * Servidor MCP para GitHub Projects V2
+ * 
+ * Este servidor implementa ferramentas que permitem interagir com a API GraphQL do GitHub Projects V2.
+ * Todas as ferramentas seguem o formato MCP e retornam respostas estruturadas conforme o padrão.
+ * 
+ * Formato MCP:
+ * - Todas as ferramentas recebem parâmetros JSON nomeados
+ * - Todas as respostas seguem a estrutura { content: [{ type: "text", text: "..." }] }
+ * - Erros são indicados com a flag isError: true
+ * 
+ * Requer token clássico do GitHub (ghp_*) com escopos adequados para a API GraphQL.
+ */
 const server = new Server(
   {
     name: "github-projects-mcp-server",
@@ -66,13 +80,64 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         description: "Create a new GitHub Project (V2) for a user or organization",
         inputSchema: zodToJsonSchema(CreateProjectSchema),
       },
+      {
+        name: "update_project",
+        description: "Update an existing GitHub Project (V2)",
+        inputSchema: zodToJsonSchema(UpdateProjectSchema),
+      },
+      {
+        name: "toggle_project_archive",
+        description: "Archive or unarchive a GitHub Project (V2)",
+        inputSchema: zodToJsonSchema(ToggleProjectArchiveSchema),
+      },
       
       // Aqui serão adicionadas as outras ferramentas à medida que forem implementadas
     ],
   };
 });
 
-// Configura o handler para processar as chamadas de ferramentas
+/**
+ * Handler para processar chamadas de ferramentas MCP
+ * 
+ * O formato de chamada MCP segue o padrão:
+ * 
+ * Exemplo para test_connection:
+ * ```
+ * {
+ *   "name": "test_connection",
+ *   "arguments": {
+ *     "random_string": "test"
+ *   }
+ * }
+ * ```
+ * 
+ * Exemplo para list_projects:
+ * ```
+ * {
+ *   "name": "list_projects",
+ *   "arguments": {
+ *     "owner": "octocat",
+ *     "type": "user",
+ *     "first": 10
+ *   }
+ * }
+ * ```
+ * 
+ * Exemplo para create_project:
+ * ```
+ * {
+ *   "name": "create_project",
+ *   "arguments": {
+ *     "owner": "octocat",
+ *     "type": "user",
+ *     "title": "My New Project",
+ *     "description": "Project description",
+ *     "layout": "BOARD",
+ *     "public": true
+ *   }
+ * }
+ * ```
+ */
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: parameters } = request.params;
   
@@ -92,6 +157,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case "create_project":
         // @ts-ignore - O tipo de 'parameters' é diferente do esperado, mas os dados estão corretos
         return await createProject(parameters);
+        
+      case "update_project":
+        // @ts-ignore - O tipo de 'parameters' é diferente do esperado, mas os dados estão corretos
+        return await updateProject(parameters);
+        
+      case "toggle_project_archive":
+        // @ts-ignore - O tipo de 'parameters' é diferente do esperado, mas os dados estão corretos
+        return await toggleProjectArchive(parameters);
         
       // Adicionar novos casos aqui à medida que implementamos mais ferramentas
         

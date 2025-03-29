@@ -92,4 +92,76 @@ export function createErrorResponse(error: any): { error: string } {
     : error?.message || 'Erro desconhecido';
   
   return { error: errorMessage };
+}
+
+/**
+ * Sanitiza um objeto para garantir que ele possa ser serializado para JSON
+ * sem problemas de formato ou caracteres inválidos
+ * @param data Objeto a ser sanitizado
+ * @returns Objeto sanitizado seguro para ser serializado para JSON
+ */
+export function sanitizeForJsonResponse(data: any): any {
+  if (data === undefined || data === null) {
+    return null;
+  }
+  
+  try {
+    // Verifica se o objeto pode ser serializado e deserializado sem problemas
+    const jsonString = JSON.stringify(data);
+    const parsed = JSON.parse(jsonString);
+    return parsed;
+  } catch (error) {
+    // Se houver erro, loga e retorna um objeto simplificado
+    logger.error(`Erro ao serializar objeto para JSON: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+    logger.debug({ data }, 'Objeto que causou erro de serialização');
+    
+    return {
+      error: "Erro ao processar resposta",
+      message: "O objeto não pôde ser convertido para JSON válido"
+    };
+  }
+}
+
+/**
+ * Formata uma resposta MCP com conteúdo sanitizado para garantir JSON válido
+ * @param content Conteúdo a ser incluído na resposta
+ * @param isError Se a resposta representa um erro
+ * @returns Objeto de resposta MCP formatado corretamente
+ */
+export function createMcpResponse(content: any, isError: boolean = false): {
+  isError?: boolean;
+  content: Array<{ type: string; text: string }>;
+} {
+  // Sanitiza o conteúdo antes de serializar
+  const sanitizedContent = sanitizeForJsonResponse(content);
+  
+  try {
+    // Cria a resposta no formato MCP
+    return {
+      ...(isError ? { isError: true } : {}),
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify(sanitizedContent)
+        }
+      ]
+    };
+  } catch (error) {
+    // Manipula erros na criação da resposta
+    logger.error(`Erro ao formatar resposta MCP: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+    
+    // Fallback para garantir uma resposta válida
+    return {
+      isError: true,
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify({
+            error: "Erro interno",
+            message: "Não foi possível gerar resposta válida"
+          })
+        }
+      ]
+    };
+  }
 } 

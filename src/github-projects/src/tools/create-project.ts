@@ -1,10 +1,65 @@
 import { z } from 'zod';
 import { executeGraphQL } from '../clients/github-client.js';
-import { createErrorResponse } from '../utils/error-utils.js';
+import { createErrorResponse, createMcpResponse } from '../utils/error-utils.js';
 import { isTokenSuitableForGraphQL } from '../utils/token-utils.js';
 
 /**
+ * Ferramenta MCP: create_project
+ * 
+ * Cria um novo projeto do GitHub Projects V2 para um usuário ou organização.
+ * 
+ * No formato MCP, esta ferramenta pode ser invocada assim:
+ * 
+ * ```json
+ * {
+ *   "name": "create_project",
+ *   "arguments": {
+ *     "owner": "lucianotonet",
+ *     "type": "user",
+ *     "title": "Meu Projeto",
+ *     "description": "Descrição do projeto",
+ *     "layout": "BOARD",
+ *     "public": true
+ *   }
+ * }
+ * ```
+ * 
+ * Resposta de sucesso:
+ * ```json
+ * {
+ *   "content": [
+ *     {
+ *       "type": "text",
+ *       "text": "{\"success\":true,\"message\":\"Projeto criado com sucesso\",\"project\":{...}}"
+ *     }
+ *   ]
+ * }
+ * ```
+ * 
+ * Resposta de erro:
+ * ```json
+ * {
+ *   "isError": true,
+ *   "content": [
+ *     {
+ *       "type": "text",
+ *       "text": "{\"success\":false,\"message\":\"Erro ao criar projeto\",\"error\":\"...\"}"
+ *     }
+ *   ]
+ * }
+ * ```
+ */
+
+/**
  * Schema de validação para criar projetos
+ * 
+ * Parâmetros:
+ * - owner (string): Nome do usuário ou organização (obrigatório)
+ * - type ('user'|'organization'): Tipo de proprietário (obrigatório)
+ * - title (string): Título do projeto (obrigatório)
+ * - description (string): Descrição do projeto (opcional)
+ * - layout ('BOARD'|'TABLE'): Tipo de layout do projeto (opcional, padrão: BOARD)
+ * - public (boolean): Se o projeto deve ser público (opcional, padrão: false)
  */
 export const CreateProjectSchema = z.object({
   owner: z.string().min(1).describe('Username or organization name'),
@@ -97,13 +152,33 @@ const CREATE_ORG_PROJECT_MUTATION = `
 `;
 
 /**
- * Cria um novo projeto do GitHub (V2) para um usuário ou organização
- * @param owner Nome do usuário ou organização
- * @param type Tipo de proprietário (usuário ou organização)
- * @param title Título do projeto
- * @param description Descrição do projeto (opcional)
- * @param layout Tipo de layout do projeto (opcional, padrão BOARD)
- * @param public Se o projeto deve ser público (opcional, padrão false)
+ * Implementação da ferramenta MCP: create_project
+ * 
+ * Esta função segue o padrão MCP de resposta:
+ * - Respostas bem-sucedidas retornam um objeto com a propriedade content
+ * - Erros retornam um objeto com as propriedades isError e content
+ * 
+ * @param params Parâmetros para criação do projeto
+ * @returns Resposta no formato MCP com os dados do projeto criado ou mensagem de erro
+ * 
+ * @example
+ * // Criar um projeto para usuário
+ * createProject({
+ *   owner: "octocat",
+ *   type: "user",
+ *   title: "Meu Projeto",
+ *   public: true
+ * });
+ * 
+ * @example
+ * // Criar um projeto para organização
+ * createProject({
+ *   owner: "github",
+ *   type: "organization",
+ *   title: "Projeto da Organização",
+ *   description: "Descrição detalhada",
+ *   layout: "BOARD"
+ * });
  */
 export async function createProject(params: CreateProjectParams) {
   try {
@@ -124,19 +199,12 @@ export async function createProject(params: CreateProjectParams) {
     }
     
     if (!isTokenSuitableForGraphQL(token)) {
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify({
-              success: false,
-              message: 'Token do GitHub não é adequado para API GraphQL. Utilize um token clássico (ghp_).',
-              tokenType: 'fine-grained',
-              isValid: false
-            })
-          }
-        ]
-      };
+      return createMcpResponse({
+        success: false,
+        message: 'Token do GitHub não é adequado para API GraphQL. Utilize um token clássico (ghp_).',
+        tokenType: 'fine-grained',
+        isValid: false
+      }, true);
     }
     
     // Primeiro, vamos obter o ID global do proprietário (usuário ou organização)
@@ -166,7 +234,7 @@ export async function createProject(params: CreateProjectParams) {
     }
     
     // Prepara os dados para criar o projeto
-    // Baseado na documentação atual do GitHub Projects v2 GraphQL API
+    // Na API do GitHub, apenas o ownerId e title são campos obrigatórios
     const input = {
       ownerId,
       title,
@@ -189,42 +257,29 @@ export async function createProject(params: CreateProjectParams) {
       throw new Error('Falha ao criar projeto. Resposta inválida da API.');
     }
     
-    // Retorna os dados do projeto criado
-    return {
-      content: [
-        {
-          type: "text",
-          text: JSON.stringify({
-            success: true,
-            message: `Projeto "${title}" criado com sucesso.`,
-            project: {
-              id: project.id,
-              number: project.number,
-              title: project.title,
-              shortDescription: project.shortDescription,
-              url: project.url,
-              closed: project.closed,
-              createdAt: project.createdAt,
-              updatedAt: project.updatedAt
-            }
-          })
-        }
-      ]
-    };
+    // Retornar o resultado
+    return createMcpResponse({
+      success: true,
+      message: 'Projeto criado com sucesso.',
+      project: {
+        id: project.id,
+        number: project.number,
+        title: project.title,
+        shortDescription: project.shortDescription,
+        url: project.url,
+        closed: project.closed,
+        createdAt: project.createdAt,
+        updatedAt: project.updatedAt,
+        owner: project.owner.login
+      }
+    });
     
   } catch (error) {
-    return {
-      isError: true,
-      content: [
-        {
-          type: "text",
-          text: JSON.stringify({
-            success: false,
-            message: `Falha ao criar projeto: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
-            error: error instanceof Error ? error.message : 'Erro desconhecido'
-          })
-        }
-      ]
-    };
+    // Formatar e retornar erro
+    return createMcpResponse({
+      success: false,
+      message: `Falha ao criar projeto: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    }, true);
   }
 } 

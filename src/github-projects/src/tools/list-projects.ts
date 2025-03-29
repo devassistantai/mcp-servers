@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import { executeGraphQL } from '../clients/github-client.js';
-import { createErrorResponse } from '../utils/error-utils.js';
+import { createErrorResponse, createMcpResponse } from '../utils/error-utils.js';
 import { DEFAULT_PAGE_SIZE } from '../utils/constants.js';
 import { logMcpRequest, logMcpResponse, logMcpError } from '../utils/logger.js';
-import { isTokenSuitableForGraphQL } from '../utils/token-validator.js';
+import { isTokenSuitableForGraphQL } from '../utils/token-utils.js';
 
 /**
  * Schema de validação para listar projetos
@@ -93,19 +93,12 @@ export async function listProjects(params: {
     }
     
     if (!isTokenSuitableForGraphQL(token)) {
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify({
-              success: false,
-              message: 'Token do GitHub não é adequado para API GraphQL. Utilize um token clássico (ghp_).',
-              tokenType: 'fine-grained',
-              isValid: false
-            })
-          }
-        ]
-      };
+      return createMcpResponse({
+        success: false,
+        message: 'Token do GitHub não é adequado para API GraphQL. Utilize um token clássico (ghp_).',
+        tokenType: 'fine-grained',
+        isValid: false
+      }, true);
     }
     
     // Seleciona a query com base no tipo
@@ -121,41 +114,26 @@ export async function listProjects(params: {
     const ownerKey = type === 'user' ? 'user' : 'organization';
     const projects = result[ownerKey]?.projectsV2?.nodes || [];
     
-    return {
-      content: [
-        {
-          type: "text",
-          text: JSON.stringify({
-            success: true,
-            message: `Projetos de ${owner} recuperados com sucesso.`,
-            projects: projects.map((project: any) => ({
-              id: project.id,
-              number: project.number,
-              title: project.title,
-              shortDescription: project.shortDescription,
-              url: project.url,
-              closed: project.closed,
-              createdAt: project.createdAt,
-              updatedAt: project.updatedAt
-            }))
-          })
-        }
-      ]
-    };
+    return createMcpResponse({
+      success: true,
+      message: `Projetos de ${owner} recuperados com sucesso.`,
+      projects: projects.map((project: any) => ({
+        id: project.id,
+        number: project.number,
+        title: project.title,
+        shortDescription: project.shortDescription,
+        url: project.url,
+        closed: project.closed,
+        createdAt: project.createdAt,
+        updatedAt: project.updatedAt
+      }))
+    });
     
   } catch (error) {
-    return {
-      isError: true,
-      content: [
-        {
-          type: "text",
-          text: JSON.stringify({
-            success: false,
-            message: `Falha ao listar projetos: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
-            error: error instanceof Error ? error.message : 'Erro desconhecido'
-          })
-        }
-      ]
-    };
+    return createMcpResponse({
+      success: false,
+      message: `Falha ao listar projetos: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    }, true);
   }
 } 

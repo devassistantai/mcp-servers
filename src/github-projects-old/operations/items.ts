@@ -3,6 +3,7 @@
  */
 import { z } from "zod";
 import { graphqlRequest, escapeGraphQLString } from "../common/utils.js";
+import { createGitHubError } from "../common/errors.js";
 
 // Schemas
 export const ListItemsSchema = z.object({
@@ -127,11 +128,27 @@ export async function listItems(
     }
   `;
 
-  const response = await graphqlRequest(query);
-  return {
-    items: (response as any).node.items.nodes,
-    pageInfo: (response as any).node.items.pageInfo
-  };
+  try {
+    const response = await graphqlRequest(query);
+    
+    // Verificar se a resposta possui a estrutura esperada
+    if (!response?.node?.items) {
+      throw createGitHubError(404, {
+        message: "Projeto não encontrado ou itens não acessíveis",
+        errors: []
+      });
+    }
+    
+    const items = response.node.items;
+    
+    return {
+      items: items.nodes || [],
+      pageInfo: items.pageInfo || { hasNextPage: false, endCursor: null }
+    };
+  } catch (error) {
+    console.error("Erro ao listar itens:", error);
+    throw error;
+  }
 }
 
 /**

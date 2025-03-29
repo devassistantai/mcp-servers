@@ -2,7 +2,8 @@
  * Operations for managing GitHub Projects (V2)
  */
 import { z } from "zod";
-import { graphqlRequest, escapeGraphQLString } from "../common/utils.js";
+import { graphqlRequest, escapeGraphQLString, checkTokenType } from "../common/utils.js";
+import { createGitHubError, isGitHubError, formatGitHubError, GitHubError } from "../common/errors.js";
 
 // Schemas
 export const ListProjectsSchema = z.object({
@@ -46,47 +47,116 @@ export async function listProjects(
   type: "user" | "organization",
   first: number = 20
 ) {
-  const safeOwner = escapeGraphQLString(owner);
-  const query = type === "user" 
-    ? `
-      query {
-        user(login: "${safeOwner}") {
-          projectsV2(first: ${first}) {
-            nodes {
-              id
-              title
-              number
-              closed
-              url
-              createdAt
-              updatedAt
+  // Check token type first to provide better error messages
+  const token = process.env.GITHUB_TOKEN;
+  if (!token) {
+    throw new Error("GitHub token not found. Please set the GITHUB_TOKEN environment variable.");
+  }
+  
+  try {
+    const tokenInfo = await checkTokenType(token);
+    
+    // If using fine-grained token with organization projects, provide a helpful error
+    if (tokenInfo.type === 'fine-grained' && type === 'organization') {
+      throw createGitHubError(403, {
+        message: "GraphQL request failed: Fine-grained tokens cannot access organization projects via GraphQL API",
+        tokenType: 'fine-grained',
+        errors: [{
+          message: "Fine-grained tokens have limited access to GraphQL API, especially for organization resources"
+        }]
+      });
+    }
+    
+    const safeOwner = escapeGraphQLString(owner);
+    const query = type === "user" 
+      ? `
+        query {
+          user(login: "${safeOwner}") {
+            projectsV2(first: ${first}) {
+              nodes {
+                id
+                title
+                number
+                closed
+                url
+                createdAt
+                updatedAt
+              }
             }
           }
         }
-      }
-    `
-    : `
-      query {
-        organization(login: "${safeOwner}") {
-          projectsV2(first: ${first}) {
-            nodes {
-              id
-              title
-              number
-              closed
-              url
-              createdAt
-              updatedAt
+      `
+      : `
+        query {
+          organization(login: "${safeOwner}") {
+            projectsV2(first: ${first}) {
+              nodes {
+                id
+                title
+                number
+                closed
+                url
+                createdAt
+                updatedAt
+              }
             }
           }
         }
-      }
-    `;
+      `;
 
-  const response = await graphqlRequest(query);
-  return type === "user" 
-    ? (response as any).user.projectsV2.nodes 
-    : (response as any).organization.projectsV2.nodes;
+    const response = await graphqlRequest(query);
+    
+    // Extrair dados de maneira segura
+    let projects = [];
+    
+    if (type === "user") {
+      // Tentar extrair projetos de um usuário
+      projects = response?.user?.projectsV2?.nodes || [];
+    } else {
+      // Tentar extrair projetos de uma organização
+      projects = response?.organization?.projectsV2?.nodes || [];
+    }
+    
+    // Se projects não for um array, convertê-lo para array
+    if (!Array.isArray(projects)) {
+      if (projects && typeof projects === 'object') {
+        // Se for um objeto, transformar em um array com este objeto
+        projects = [projects];
+      } else {
+        // Se não for nem array nem objeto, retornar array vazio
+        projects = [];
+      }
+    }
+    
+    // Garantir que cada projeto tenha os campos necessários
+    return projects.map(project => ({
+      id: project.id || `project-${Date.now()}`,
+      title: project.title || 'Untitled Project',
+      number: project.number || 0,
+      closed: project.closed || false,
+      url: project.url || '',
+      createdAt: project.createdAt || new Date().toISOString(),
+      updatedAt: project.updatedAt || new Date().toISOString()
+    }));
+  } catch (error) {
+    console.error(`Error listing projects for ${type} ${owner}:`, error);
+    // Reempacotar o erro para não quebrar o fluxo
+    if (isGitHubError(error)) {
+      return { 
+        error: formatGitHubError(error as GitHubError),
+        errorType: 'GitHub',
+        owner,
+        type
+      };
+    } else {
+      return {
+        error: `Error: ${error instanceof Error ? error.message : String(error)}`,
+        errorType: 'General',
+        owner,
+        type
+      };
+    }
+  }
 }
 
 /**
@@ -134,8 +204,21 @@ export async function getProject(projectId: string) {
     }
   `;
 
-  const response = await graphqlRequest(query);
-  return (response as any).node;
+  try {
+    const response = await graphqlRequest(query);
+    
+    if (!response?.node) {
+      throw createGitHubError(404, {
+        message: `Project not found with ID: ${projectId}`,
+        errors: []
+      });
+    }
+    
+    return response.node;
+  } catch (error) {
+    console.error(`Error getting project details for ID ${projectId}:`, error);
+    throw error;
+  }
 }
 
 /**
@@ -144,7 +227,7 @@ export async function getProject(projectId: string) {
  * @param owner Username or organization name
  * @param title Title of the project
  * @param type Type of owner (user or organization)
- * @param description Optional description of the project
+ * @param description Optional description of the project (ignored)
  * @returns Created project
  */
 export async function createProject(
@@ -155,7 +238,6 @@ export async function createProject(
 ) {
   const safeOwner = escapeGraphQLString(owner);
   const safeTitle = escapeGraphQLString(title);
-  const safeDescription = description ? escapeGraphQLString(description) : undefined;
   
   // First, we need to get the owner ID
   const ownerQuery = type === "user" 
@@ -167,13 +249,12 @@ export async function createProject(
     ? (ownerResponse as any).user.id 
     : (ownerResponse as any).organization.id;
 
-  // Now create the project
+  // Now create the project - note: description parameters are not supported in current API
   const mutation = `
     mutation {
       createProjectV2(input: {
         ownerId: "${ownerId}"
         title: "${safeTitle}"
-        ${safeDescription ? `description: "${safeDescription}"` : ""}
       }) {
         projectV2 {
           id
@@ -195,7 +276,7 @@ export async function createProject(
  * @param projectId ID of the project
  * @param title Optional new title for the project
  * @param closed Optional flag to close or open the project
- * @param description Optional new description for the project
+ * @param description Optional new description for the project (ignored)
  * @returns Updated project
  */
 export async function updateProject(
@@ -209,7 +290,7 @@ export async function updateProject(
   let updateFields = "";
   if (title) updateFields += `title: "${escapeGraphQLString(title)}" `;
   if (closed !== undefined) updateFields += `closed: ${closed} `;
-  if (description) updateFields += `shortDescription: "${escapeGraphQLString(description)}" `;
+  // description is ignored as it's not supported by the API
 
   const mutation = `
     mutation {
@@ -222,7 +303,6 @@ export async function updateProject(
           title
           number
           closed
-          shortDescription
         }
       }
     }
@@ -253,4 +333,4 @@ export async function deleteProject(projectId: string) {
 
   await graphqlRequest(mutation);
   return { success: true };
-} 
+}

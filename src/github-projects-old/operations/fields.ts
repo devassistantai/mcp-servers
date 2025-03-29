@@ -3,8 +3,9 @@
  */
 import { z } from "zod";
 import { graphqlRequest, escapeGraphQLString } from "../common/utils.js";
+import { isGitHubError, createGitHubError } from "../common/errors.js";
 
-// Schemas
+// Schemas remain the same
 export const ListFieldsSchema = z.object({
   project_id: z.string().describe("ID of the project"),
 });
@@ -71,8 +72,22 @@ export async function listFields(projectId: string) {
     }
   `;
 
-  const response = await graphqlRequest(query);
-  return (response as any).node.fields.nodes;
+  try {
+    const response = await graphqlRequest(query);
+    
+    // Safely access nested properties
+    if (!response?.node?.fields?.nodes) {
+      throw createGitHubError(404, {
+        message: "Project fields not found or inaccessible",
+        errors: []
+      });
+    }
+    
+    return response.node.fields.nodes;
+  } catch (error) {
+    console.error("Error listing fields:", error);
+    throw error;
+  }
 }
 
 /**
@@ -96,7 +111,7 @@ export async function createField(
   let mutation = "";
   
   if (dataType === "SINGLE_SELECT") {
-    const optionsString = options 
+    const optionsString = options && options.length > 0
       ? options.map(opt => `"${escapeGraphQLString(opt)}"`).join(",") 
       : "";
       
@@ -141,8 +156,22 @@ export async function createField(
     `;
   }
 
-  const response = await graphqlRequest(mutation);
-  return (response as any).createProjectV2Field.field;
+  try {
+    const response = await graphqlRequest(mutation);
+    
+    // Safely access nested properties
+    if (!response?.createProjectV2Field?.field) {
+      throw createGitHubError(500, {
+        message: "Failed to create field - unexpected response structure",
+        errors: []
+      });
+    }
+    
+    return response.createProjectV2Field.field;
+  } catch (error) {
+    console.error("Error creating field:", error);
+    throw error;
+  }
 }
 
 /**
@@ -191,8 +220,22 @@ export async function updateFieldValue(
     }
   `;
 
-  const response = await graphqlRequest(mutation);
-  return (response as any).updateProjectV2ItemFieldValue.projectV2Item;
+  try {
+    const response = await graphqlRequest(mutation);
+    
+    // Safely access nested properties
+    if (!response?.updateProjectV2ItemFieldValue?.projectV2Item) {
+      throw createGitHubError(500, {
+        message: "Failed to update field value - unexpected response structure",
+        errors: []
+      });
+    }
+    
+    return response.updateProjectV2ItemFieldValue.projectV2Item;
+  } catch (error) {
+    console.error("Error updating field value:", error);
+    throw error;
+  }
 }
 
 /**
@@ -219,6 +262,20 @@ export async function deleteField(projectId: string, fieldId: string) {
     }
   `;
 
-  const response = await graphqlRequest(mutation);
-  return (response as any).deleteProjectV2Field.deletedField;
-} 
+  try {
+    const response = await graphqlRequest(mutation);
+    
+    // Safely access nested properties
+    if (!response?.deleteProjectV2Field?.deletedField) {
+      throw createGitHubError(500, {
+        message: "Failed to delete field - unexpected response structure",
+        errors: []
+      });
+    }
+    
+    return response.deleteProjectV2Field.deletedField;
+  } catch (error) {
+    console.error("Error deleting field:", error);
+    throw error;
+  }
+}

@@ -1,4 +1,4 @@
-FROM node:22.12-alpine AS builder
+FROM node:20-alpine AS builder
 
 # Must be entire project because `prepare` script is run during `npm install` and requires all files.
 COPY src/github-projects /app
@@ -6,9 +6,9 @@ COPY tsconfig.json /tsconfig.json
 
 WORKDIR /app
 
-RUN --mount=type=cache,target=/root/.npm npm install
+RUN npm install
 
-FROM node:22.12-alpine AS release
+FROM node:20-alpine AS release
 
 COPY --from=builder /app/dist /app/dist
 COPY --from=builder /app/package.json /app/package.json

@@ -3,6 +3,7 @@
  */
 import { z } from "zod";
 import { graphqlRequest, escapeGraphQLString } from "../common/utils.js";
+import { createGitHubError } from "../common/errors.js";
 
 // Schemas
 export const ListViewsSchema = z.object({
@@ -54,8 +55,21 @@ export async function listViews(projectId: string) {
     }
   `;
 
-  const response = await graphqlRequest(query);
-  return (response as any).node.views.nodes;
+  try {
+    const response = await graphqlRequest(query);
+    
+    if (!response?.node?.views?.nodes) {
+      throw createGitHubError(404, {
+        message: "Project views not found or inaccessible",
+        errors: []
+      });
+    }
+    
+    return response.node.views.nodes;
+  } catch (error) {
+    console.error("Error listing views:", error);
+    throw error;
+  }
 }
 
 /**
@@ -90,8 +104,21 @@ export async function createView(
     }
   `;
 
-  const response = await graphqlRequest(mutation);
-  return (response as any).createProjectV2View.projectV2View;
+  try {
+    const response = await graphqlRequest(mutation);
+    
+    if (!response?.createProjectV2View?.projectV2View) {
+      throw createGitHubError(500, {
+        message: "Failed to create view - unexpected response structure",
+        errors: []
+      });
+    }
+    
+    return response.createProjectV2View.projectV2View;
+  } catch (error) {
+    console.error("Error creating view:", error);
+    throw error;
+  }
 }
 
 /**
@@ -132,8 +159,21 @@ export async function updateView(
     }
   `;
 
-  const response = await graphqlRequest(mutation);
-  return (response as any).updateProjectV2View.projectV2View;
+  try {
+    const response = await graphqlRequest(mutation);
+    
+    if (!response?.updateProjectV2View?.projectV2View) {
+      throw createGitHubError(500, {
+        message: "Failed to update view - unexpected response structure",
+        errors: []
+      });
+    }
+    
+    return response.updateProjectV2View.projectV2View;
+  } catch (error) {
+    console.error("Error updating view:", error);
+    throw error;
+  }
 }
 
 /**
@@ -158,8 +198,21 @@ export async function deleteView(projectId: string, viewId: string) {
     }
   `;
 
-  const response = await graphqlRequest(mutation);
-  return {
-    deletedViewId: (response as any).deleteProjectV2View.deletedViewId
-  };
+  try {
+    const response = await graphqlRequest(mutation);
+    
+    if (!response?.deleteProjectV2View?.deletedViewId) {
+      throw createGitHubError(500, {
+        message: "Failed to delete view - unexpected response structure",
+        errors: []
+      });
+    }
+    
+    return {
+      deletedViewId: response.deleteProjectV2View.deletedViewId
+    };
+  } catch (error) {
+    console.error("Error deleting view:", error);
+    throw error;
+  }
 } 

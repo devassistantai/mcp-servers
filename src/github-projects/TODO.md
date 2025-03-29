@@ -53,6 +53,7 @@
 | `list_project_fields`   | ✅ Sucesso | Listagem correta dos campos com propriedades           |
 | `list_project_views`    | ✅ Sucesso | Listagem de visualizações com dados básicos            |
 | `create_project_field`  | ✅ Sucesso | Cria campos TEXT, NUMBER e SINGLE_SELECT com opções    |
+| `create_project_view`   | ❌ Falha   | API do GitHub não suporta a criação de visualizações   |
 
 ## Informações Importantes
 
@@ -96,9 +97,8 @@
 
 ### Próximas Melhorias Sugeridas
 
-1. **Implementar `create_project_view`**
-   - Permitir criação de novas visualizações para projetos
-   - Suporte para diferentes layouts (BOARD, TABLE)
+1. **(Removido) Implementar `create_project_view`**
+   - Funcionalidade removida pois não é suportada pela API do GitHub.
 
 2. **Adicionar recursos avançados**
    - Filtros para views

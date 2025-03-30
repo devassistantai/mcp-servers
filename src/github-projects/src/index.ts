@@ -25,6 +25,9 @@ import { listProjectViews, ListProjectViewsSchema } from './tools/list-project-v
 import { addProjectItem, AddProjectItemSchema } from './tools/add-project-item.js';
 import { createDraftItem, CreateDraftItemSchema } from './tools/create-draft-item.js';
 import { createProjectField, CreateProjectFieldSchema } from './tools/create-project-field.js';
+import { createTask, CreateTaskSchema } from './tools/create-task.js';
+import { manageTaskStatus, ManageTaskStatusSchema } from './tools/manage-task-status.js';
+import { groupTasks, GroupTasksSchema } from './tools/group-tasks.js';
 
 // Importa utilitários
 import logger, { safeConsole } from './utils/logger.js';
@@ -139,7 +142,22 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         inputSchema: zodToJsonSchema(CreateProjectFieldSchema),
       },
       
-      // Aqui serão adicionadas as outras ferramentas à medida que forem implementadas
+      // Novas ferramentas de gerenciamento de tarefas
+      {
+        name: "create_task",
+        description: "Create a new task (as draft or real issue) in a GitHub Project (V2)",
+        inputSchema: zodToJsonSchema(CreateTaskSchema),
+      },
+      {
+        name: "manage_task_status",
+        description: "Update task status and optionally add a comment in a GitHub Project (V2)",
+        inputSchema: zodToJsonSchema(ManageTaskStatusSchema),
+      },
+      {
+        name: "group_tasks",
+        description: "Group multiple tasks by setting the same field value for all of them in a GitHub Project (V2)",
+        inputSchema: zodToJsonSchema(GroupTasksSchema),
+      },
     ],
   };
 });
@@ -199,54 +217,50 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         
       // Projects V2
       case "list_projects":
-        // @ts-ignore - O tipo de 'parameters' é diferente do esperado, mas os dados estão corretos
-        return await listProjects(parameters);
+        return await listProjects(parameters as any);
         
       case "create_project":
-        // @ts-ignore - O tipo de 'parameters' é diferente do esperado, mas os dados estão corretos
-        return await createProject(parameters);
+        return await createProject(parameters as any);
         
       case "update_project":
-        // @ts-ignore - O tipo de 'parameters' é diferente do esperado, mas os dados estão corretos
-        return await updateProject(parameters);
+        return await updateProject(parameters as any);
         
       case "toggle_project_archive":
-        // @ts-ignore - O tipo de 'parameters' é diferente do esperado, mas os dados estão corretos
-        return await toggleProjectArchive(parameters);
+        return await toggleProjectArchive(parameters as any);
         
       case "update_project_item":
-        // @ts-ignore - O tipo de 'parameters' é diferente do esperado, mas os dados estão corretos
-        return await updateProjectItem(parameters);
+        return await updateProjectItem(parameters as any);
         
       case "remove_project_item":
-        // @ts-ignore - O tipo de 'parameters' é diferente do esperado, mas os dados estão corretos
-        return await removeProjectItem(parameters);
+        return await removeProjectItem(parameters as any);
         
       case "list_project_fields":
-        // @ts-ignore - O tipo de 'parameters' é diferente do esperado, mas os dados estão corretos
-        return await listProjectFields(parameters);
+        return await listProjectFields(parameters as any);
         
       case "list_project_views":
-        // @ts-ignore - O tipo de 'parameters' é diferente do esperado, mas os dados estão corretos
-        return await listProjectViews(parameters);
+        return await listProjectViews(parameters as any);
         
       case "create_project_field":
-        // @ts-ignore - O tipo de 'parameters' é diferente do esperado, mas os dados estão corretos
-        return await createProjectField(parameters);
+        return await createProjectField(parameters as any);
         
       case "list_project_items":
-        // @ts-ignore - O tipo de 'parameters' é diferente do esperado, mas os dados estão corretos
-        return await listProjectItems(parameters);
+        return await listProjectItems(parameters as any);
         
       case "add_project_item":
-        // @ts-ignore - O tipo de 'parameters' é diferente do esperado, mas os dados estão corretos
-        return await addProjectItem(parameters);
+        return await addProjectItem(parameters as any);
         
       case "create_draft_item":
-        // @ts-ignore - O tipo de 'parameters' é diferente do esperado, mas os dados estão corretos
-        return await createDraftItem(parameters);
+        return await createDraftItem(parameters as any);
         
-      // Adicionar novos casos aqui à medida que implementamos mais ferramentas
+      // Novas ferramentas de gerenciamento de tarefas
+      case "create_task":
+        return await createTask(parameters as any);
+        
+      case "manage_task_status":
+        return await manageTaskStatus(parameters as any);
+        
+      case "group_tasks":
+        return await groupTasks(parameters as any);
         
       default:
         return {

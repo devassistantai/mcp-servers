@@ -3,7 +3,7 @@ import 'dotenv/config';
 // Configuração do logger
 const logLevel = process.env.LOG_LEVEL || 'info';
 const enableDiagnostics = process.env.LOG_DIAGNOSTICS === 'true';
-const disableAllLogs = true; // Desativa completamente todos os logs para evitar problemas de formatação JSON
+const disableAllLogs = process.env.DISABLE_LOGS === 'true'; // Agora controlado por variável de ambiente
 
 // Níveis de log e seus valores numéricos
 const LOG_LEVELS = {

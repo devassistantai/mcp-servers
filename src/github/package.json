@@ -1,11 +1,13 @@
 {
-  "name": "@modelcontextprotocol/server-github",
-  "version": "0.6.2",
-  "description": "MCP server for using the GitHub API",
+  "name": "@devassistantai/github",
+  "version": "1.0.0",
+  "description": "MCP server for GitHub",
   "license": "MIT",
-  "author": "Anthropic, PBC (https://anthropic.com)",
-  "homepage": "https://modelcontextprotocol.io",
-  "bugs": "https://github.com/modelcontextprotocol/servers/issues",
+  "author": "Luciano Tonet <tonetlds@gmail.com>",
+  "homepage": "https://devassistant.tonet.dev",
+  "bugs": {
+    "url": "https://github.com/devassistantai/mcp-servers/issues"
+  },
   "type": "module",
   "bin": {
     "mcp-server-github": "dist/index.js"
@@ -30,5 +32,7 @@
   "devDependencies": {
     "shx": "^0.3.4",
     "typescript": "^5.6.2"
-  }
+  },
+  "main": "index.js",
+  "keywords": []
 }

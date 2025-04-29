@@ -1,7 +1,7 @@
 {
-  "name": "@modelcontextprotocol/server-github-projects",
-  "version": "0.1.0",
-  "description": "MCP server for GitHub Projects V2 API",
+  "name": "@devassistantai/github-projects",
+  "version": "1.0.0",
+  "description": "MCP server for GitHub Projects",
   "license": "MIT",
   "type": "module",
   "bin": {
@@ -9,20 +9,32 @@
   },
   "files": ["dist"],
   "scripts": {
-    "build": "tsc && shx chmod +x dist/*.js",
+    "build": "tsc && tsx scripts/chmod.ts",
     "prepare": "npm run build",
-    "watch": "tsc --watch"
+    "watch": "tsc --watch",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "lint": "eslint . --ext .ts",
+    "clean": "rimraf dist",
+    "test": "vitest run"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.0.1",
-    "@types/node": "^22",
-    "node-fetch": "^3.3.2",
-    "universal-user-agent": "^7.0.2",
+    "@octokit/graphql": "^7.0.2",
+    "@octokit/rest": "^20.0.2",
+    "dotenv": "^16.4.5",
     "zod": "^3.22.4",
     "zod-to-json-schema": "^3.23.5"
   },
   "devDependencies": {
-    "shx": "^0.3.4",
-    "typescript": "^5.6.2"
+    "@types/node": "^20.11.30",
+    "eslint": "^8.56.0",
+    "rimraf": "^5.0.5",
+    "tsx": "^4.7.1",
+    "typescript": "^5.6.2",
+    "vitest": "^1.4.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   }
 } 

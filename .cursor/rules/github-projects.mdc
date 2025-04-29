@@ -1,0 +1,120 @@
+# GitHub Projects V2 MCP - Regras e Informações
+
+## Visão Geral do Projeto
+
+O MCP Server GitHub Projects V2 é uma implementação do Model Context Protocol que permite interagir com a API GraphQL do GitHub Projects V2. O objetivo é fornecer ferramentas para gerenciar projetos, itens, campos e, especialmente, tarefas dentro de projetos do GitHub, facilitando a integração com assistentes de código baseados em IA.
+
+## Estrutura do Projeto
+
+```
+src/github-projects/
+├── dist/             # Código compilado
+├── scripts/          # Scripts auxiliares
+├── src/
+│   ├── clients/      # Clientes de API (GraphQL e REST)
+│   ├── tools/        # Implementações das ferramentas MCP
+│   └── utils/        # Utilitários comuns
+├── .env              # Variáveis de ambiente
+├── TODO.md           # Lista de funcionalidades implementadas e pendentes
+├── USAGE.md          # Documentação de uso das ferramentas
+└── package.json      # Dependências e scripts
+```
+
+## Convenções e Padrões
+
+### Padrão de Código
+
+- Código em TypeScript com tipagem estrita
+- Funções bem documentadas com JSDoc
+- Tratamento padronizado de erros com helpers específicos
+- Validação de parâmetros com Zod
+- Logs detalhados para cada operação
+
+### Formato das Ferramentas
+
+Cada ferramenta segue um padrão consistente:
+1. **Schema de validação Zod** - Define os parâmetros e suas validações
+2. **Função principal de execução** - Implementa a lógica da ferramenta
+3. **Retorno padronizado** - Utiliza `createMcpResponse` para formato consistente
+
+### Formato de Resposta MCP
+
+Todas as respostas seguem este formato:
+```json
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "JSON_STRING_DA_RESPOSTA"
+    }
+  ]
+}
+```
+
+Para erros:
+```json
+{
+  "isError": true,
+  "content": [
+    {
+      "type": "text",
+      "text": "JSON_STRING_DO_ERRO"
+    }
+  ]
+}
+```
+
+### Ferramentas para Gerenciamento de Tarefas
+
+O sistema implementa três ferramentas principais para gerenciamento de tarefas:
+
+1. `create_task` - Cria tarefas como rascunhos ou issues reais com campos personalizados
+2. `manage_task_status` - Atualiza o status das tarefas e adiciona comentários
+3. `group_tasks` - Agrupa várias tarefas definindo o mesmo valor para um campo
+
+## Requisitos e Dependências
+
+### Token do GitHub
+
+- Exige token clássico do GitHub (formato `ghp_`)
+- O token deve ter as permissões:
+  - `repo` (acesso a repositórios)
+  - `project` (acesso a projetos)
+  - `admin:org` (para projetos de organizações)
+
+### Limitações da API
+
+- A API do GitHub não suporta a criação de visualizações de projeto
+- Algumas operações requerem IDs específicos que precisam ser obtidos previamente
+- Tokens fine-grained não funcionam bem com a API GraphQL do GitHub
+
+## Dicas para Implementação
+
+1. **Obtenção de IDs necessários**:
+   - Use a ferramenta `list_projects` para obter o `projectId`
+   - Use `list_project_fields` para obter IDs de campos
+   - Use `list_project_items` para obter IDs de itens
+
+2. **Tratamento de valores**:
+   - Para campos de seleção única, use o nome da opção e não o ID
+   - Para campos de data, use o formato ISO 8601 (YYYY-MM-DD)
+   - Ao criar tarefas, verifique permissões e existência do repositório
+
+3. **Fluxo de trabalho recomendado**:
+   - Para gerenciar tarefas, primeiro liste os itens para obter seus IDs
+   - Ao atualizar status, verifique as opções válidas listando os campos
+   - Para operações em lote, agrupe tarefas por campo para eficiência
+
+## Principais Desafios
+
+1. A API GraphQL do GitHub é complexa e tem muitos tipos e uniões
+2. Para operações como adição de comentários, são necessárias várias chamadas encadeadas
+3. A formatação correta de valores para diferentes tipos de campos requer processamento específico
+4. A obtenção e uso correto de IDs são críticos para o funcionamento adequado
+
+## Recomendações
+
+- Sempre faça validação de parâmetros antes de usar as ferramentas
+- Utilize ajuda interativa para guiar o usuário na obtenção de IDs e valores corretos
+- Explore primeiro a estrutura do projeto antes de sugerir atualizações ou modificações
+- Consulte o arquivo TODO.md para ver o que já foi implementado e o que ainda está pendente 

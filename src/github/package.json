@@ -5,7 +5,9 @@
   "license": "MIT",
   "author": "Luciano Tonet <tonetlds@gmail.com>",
   "homepage": "https://devassistant.tonet.dev",
-  "bugs": "https://github.com/devassistantai/mcp-servers/issues",
+  "bugs": {
+    "url": "https://github.com/devassistantai/mcp-servers/issues"
+  },
   "type": "module",
   "bin": {
     "mcp-server-github": "dist/index.js"
@@ -30,5 +32,7 @@
   "devDependencies": {
     "shx": "^0.3.4",
     "typescript": "^5.6.2"
-  }
+  },
+  "main": "index.js",
+  "keywords": []
 }

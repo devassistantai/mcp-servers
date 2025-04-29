@@ -1,23 +1,30 @@
-FROM node:22.12-alpine AS builder
+# Stage 1: Build
+FROM node:20-alpine AS builder
 
-# Must be entire project because `prepare` script is run during `npm install` and requires all files.
-COPY src/github /app
-COPY tsconfig.json /tsconfig.json
-
+# Set working directory
 WORKDIR /app
 
-RUN --mount=type=cache,target=/root/.npm npm install
+# Copy manifest and config for build
+COPY package.json package-lock.json* tsconfig.json ./
+COPY src ./src
+COPY scripts ./scripts
 
-FROM node:22.12-alpine AS release
+# Install dependencies and build
+RUN npm install && npm run build
 
-COPY --from=builder /app/dist /app/dist
-COPY --from=builder /app/package.json /app/package.json
-COPY --from=builder /app/package-lock.json /app/package-lock.json
+# Stage 2: Production Image
+FROM node:20-alpine
 
+WORKDIR /app
 ENV NODE_ENV=production
 
-WORKDIR /app
+# Copy built artifacts
+COPY --from=builder /app/dist ./dist
+# Copy package manifest for dependencies
+COPY package.json package-lock.json* ./
 
-RUN npm ci --ignore-scripts --omit-dev
+# Install production dependencies only, skip scripts
+RUN npm install --omit=dev --ignore-scripts
 
+# Default command
 ENTRYPOINT ["node", "dist/index.js"]

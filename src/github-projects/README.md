@@ -1,5 +1,8 @@
 # GitHub Projects V2 MCP Server (@devassistantai/github-projects)
 
+[![smithery badge](https://smithery.ai/badge/@devassistantai/github-projects)](https://smithery.ai/server/@devassistantai/github-projects)
+
+
 A Model Context Protocol (MCP) server designed to interact with the GitHub Projects V2 API using GraphQL. This server provides a set of tools that allow language models or other clients to manage GitHub Projects, including tasks, items, fields, and views.
 
 ## Prerequisites

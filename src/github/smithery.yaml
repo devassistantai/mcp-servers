@@ -1,0 +1,20 @@
+# Smithery configuration file
+startCommand:
+  type: stdio
+  configSchema:
+    # JSON Schema defining the configuration options for the GitHub MCP server
+    type: object
+    required:
+      - githubToken
+    properties:
+      githubToken:
+        type: string
+        description: The GitHub personal access token for authentication
+  commandFunction: |
+    config => ({
+      command: 'npx',
+      args: ['-y', '@devassistantai/github'],
+      env: { 
+        GITHUB_TOKEN: config.githubToken
+      }
+    }) 

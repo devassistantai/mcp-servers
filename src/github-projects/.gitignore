@@ -1,37 +1,29 @@
-# Dependências
+# Diretórios
 node_modules/
-.pnp/
-.pnp.js
-
-# Arquivos de build
 dist/
-build/
-out/
-.next/
+logs/
 
-# Variáveis de ambiente
+# Arquivos de variáveis de ambiente
 .env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*.local
 
 # Logs
-logs
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Arquivos do sistema
+# Arquivos temporários
+*.tmp
+*.temp
 .DS_Store
 Thumbs.db
-ehthumbs.db
-Desktop.ini
 
-# Editores e IDEs
-.idea/
-.vscode/
-*.swp
-*.swo
-*~ 
+# Diretório de cobertura de testes
+coverage/
+
+# Arquivos de cache
+.npm
+.eslintcache
+.vscode/ 

@@ -1,12 +1,12 @@
 {
-  "name": "@modelcontextprotocol/servers",
+  "name": "@devassistantai/mcp-servers",
   "private": true,
-  "version": "0.6.2",
+  "version": "1.0.0",
   "description": "Model Context Protocol servers",
   "license": "MIT",
-  "author": "Anthropic, PBC (https://anthropic.com)",
-  "homepage": "https://modelcontextprotocol.io",
-  "bugs": "https://github.com/modelcontextprotocol/servers/issues",
+  "author": "Luciano Tonet <tonetlds@gmail.com>",
+  "homepage": "https://devassistant.tonet.dev",
+  "bugs": "https://github.com/devassistantai/mcp-servers/issues",
   "type": "module",
   "workspaces": [
     "src/*"

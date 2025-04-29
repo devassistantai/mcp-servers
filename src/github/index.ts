@@ -15,6 +15,7 @@ import * as pulls from './operations/pulls.js';
 import * as branches from './operations/branches.js';
 import * as search from './operations/search.js';
 import * as commits from './operations/commits.js';
+import * as test_connection from './operations/test_connection.js';
 import {
   GitHubError,
   GitHubValidationError,
@@ -65,6 +66,11 @@ function formatGitHubError(error: GitHubError): string {
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
     tools: [
+      {
+        name: "test_connection",
+        description: "Test GitHub API connection and token validity",
+        inputSchema: zodToJsonSchema(test_connection.TestConnectionSchema),
+      },
       {
         name: "create_or_update_file",
         description: "Create or update a single file in a GitHub repository",
@@ -236,6 +242,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
 
     switch (request.params.name) {
+      case "test_connection": {
+        test_connection.TestConnectionSchema.parse(request.params.arguments);
+        const result = await test_connection.testConnection();
+        return { content: [{ type: "text", text: JSON.stringify(result) }] };
+      }
+
       case "fork_repository": {
         const args = repository.ForkRepositorySchema.parse(request.params.arguments);
         const fork = await repository.forkRepository(args.owner, args.repo, args.organization);

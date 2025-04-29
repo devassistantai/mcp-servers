@@ -28,6 +28,9 @@ import { createProjectField, CreateProjectFieldSchema } from './tools/create-pro
 import { createTask, CreateTaskSchema } from './tools/create-task.js';
 import { manageTaskStatus, ManageTaskStatusSchema } from './tools/manage-task-status.js';
 import { groupTasks, GroupTasksSchema } from './tools/group-tasks.js';
+import { convertDraftToIssue, ConvertDraftToIssueSchema } from './tools/convert-draft-to-issue.js';
+import { getIssueId, GetIssueIdSchema } from './tools/get-issue-id.js';
+import { bulkAddIssues, BulkAddIssuesSchema } from './tools/bulk-add-issues.js';
 
 // Importa utilitários
 import logger, { safeConsole } from './utils/logger.js';
@@ -158,6 +161,22 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         description: "Group multiple tasks by setting the same field value for all of them in a GitHub Project (V2)",
         inputSchema: zodToJsonSchema(GroupTasksSchema),
       },
+      // Novas ferramentas de conversão e manipulação avançada de issues
+      {
+        name: "convert_draft_to_issue",
+        description: "Convert a draft item to an issue in a GitHub Project (V2)",
+        inputSchema: zodToJsonSchema(ConvertDraftToIssueSchema),
+      },
+      {
+        name: "get_issue_id",
+        description: "Get the ID of an issue in a GitHub Project (V2)",
+        inputSchema: zodToJsonSchema(GetIssueIdSchema),
+      },
+      {
+        name: "bulk_add_issues",
+        description: "Bulk add issues to a GitHub Project (V2)",
+        inputSchema: zodToJsonSchema(BulkAddIssuesSchema),
+      },
     ],
   };
 });
@@ -261,6 +280,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         
       case "group_tasks":
         return await groupTasks(parameters as any);
+        
+      // Novas ferramentas de conversão e manipulação avançada de issues
+      case "convert_draft_to_issue":
+        return await convertDraftToIssue(parameters as any);
+        
+      case "get_issue_id":
+        return await getIssueId(parameters as any);
+        
+      case "bulk_add_issues":
+        return await bulkAddIssues(parameters as any);
         
       default:
         return {

@@ -1,0 +1,43 @@
+# Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
+
+startCommand:
+  type: stdio
+  configSchema:
+    # JSON Schema defining the configuration options for the MCP.
+    type: object
+    required:
+      - githubToken
+    properties:
+      githubToken:
+        type: string
+        description: GitHub classic personal access token (ghp_...)
+      logLevel:
+        type: string
+        default: info
+        description: Logging level
+      logDiagnostics:
+        type: boolean
+        default: false
+        description: Enable detailed API request/response logging
+      disableLogs:
+        type: boolean
+        default: false
+        description: Disable console output
+  commandFunction:
+    # A JS function that produces the CLI command based on the given config to start the MCP on stdio.
+    |-
+    (config) => ({
+      command: 'node',
+      args: ['dist/index.js'],
+      env: {
+        GITHUB_TOKEN: config.githubToken,
+        LOG_LEVEL: config.logLevel,
+        LOG_DIAGNOSTICS: config.logDiagnostics ? 'true' : 'false',
+        DISABLE_LOGS: config.disableLogs ? 'true' : 'false'
+      }
+    })
+  exampleConfig:
+    githubToken: ghp_XXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    logLevel: info
+    logDiagnostics: false
+    disableLogs: false

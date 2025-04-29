@@ -1,4 +1,5 @@
 # GitHub Projects V2 MCP Server (@devassistantai/github-projects)
+[![smithery badge](https://smithery.ai/badge/@devassistantai/github-projects)](https://smithery.ai/server/@devassistantai/github-projects)
 
 [![smithery badge](https://smithery.ai/badge/@devassistantai/github-projects)](https://smithery.ai/server/@devassistantai/github-projects)
 
@@ -17,6 +18,14 @@ A Model Context Protocol (MCP) server designed to interact with the GitHub Proje
 4.  **npm:** For installing dependencies and running scripts.
 
 ## Installation
+
+### Installing via Smithery
+
+To install github-projects for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@devassistantai/github-projects):
+
+```bash
+npx -y @smithery/cli install @devassistantai/github-projects --client claude
+```
 
 Clone the main repository (`mcp-servers`) if you haven't already. Then, navigate to the project directory and install dependencies:
 
@@ -176,4 +185,4 @@ Please refer to the main `CONTRIBUTING.md` file in the root of the `mcp-servers`
 
 ## License
 
-This project is licensed under the MIT License - see the `LICENSE` file in the root of the `mcp-servers` repository for details. 
+This project is licensed under the MIT License - see the `LICENSE` file in the root of the `mcp-servers` repository for details.

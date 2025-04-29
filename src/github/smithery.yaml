@@ -1,8 +1,14 @@
 # Smithery configuration file
+build:
+  dockerBuildPath: .
+  dockerImage: devassistantai/github-mcp
+  dockerBuildArgs:
+    NODE_ENV: production
+
 startCommand:
   type: stdio
   configSchema:
-    # JSON Schema defining the configuration options for the GitHub MCP server
+    # JSON Schema defining the configuration options for the MCP.
     type: object
     required:
       - githubToken
@@ -10,11 +16,12 @@ startCommand:
       githubToken:
         type: string
         description: The GitHub personal access token for authentication
-  commandFunction: |
-    config => ({
-      command: 'npx',
-      args: ['-y', '@devassistantai/github'],
-      env: { 
-        GITHUB_TOKEN: config.githubToken
+  commandFunction: |-
+    (config) => ({
+      "command": "node",
+      "args": ["dist/index.js"],
+      "env": {
+        "GITHUB_TOKEN": config.githubToken,
+        "NODE_ENV": "production"
       }
     }) 

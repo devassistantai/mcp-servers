@@ -1,0 +1,46 @@
+# Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
+
+startCommand:
+  type: stdio
+  configSchema:
+    # JSON Schema defining the configuration options for the MCP.
+    type: object
+    properties:
+      logLevel:
+        type: string
+        default: info
+        description: Logging level
+      logDiagnostics:
+        type: boolean
+        default: false
+        description: Enable detailed API request/response logging
+      disableLogs:
+        type: boolean
+        default: false
+        description: Disable console output
+      memoryFilePath:
+        type: string
+        description: "Path to the memory storage JSON file (default: memory.json in the server directory)"
+    additionalProperties: false
+  commandFunction:
+    # A JS function that produces the CLI command based on the given config to start the MCP on stdio.
+    |-
+    (config) => ({
+      command: 'node',
+      args: ['dist/index.js'],
+      env: {
+        LOG_LEVEL: config.logLevel,
+        LOG_DIAGNOSTICS: config.logDiagnostics ? 'true' : 'false',
+        DISABLE_LOGS: config.disableLogs ? 'true' : 'false',
+        NODE_ENV: "production",
+        ...(config.memoryFilePath ? { "MEMORY_FILE_PATH": config.memoryFilePath } : {})
+      }
+    })
+  exampleConfig:
+    logLevel: info
+    logDiagnostics: false
+    disableLogs: false
+
+build:
+  dockerfile: Dockerfile
+  dockerBuildPath: .
